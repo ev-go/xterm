@@ -1,23 +1,28 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
 
-func isP(s string) string {
-	mid := len(s) / 2
-	last := len(s) - 1
-	for i := 0; i < mid; i++ {
-		if s[i] != s[last-i] {
-			return "NO. It's not a Palimdrome."
-		}
-	}
-	return "YES! You've entered a Palindrome"
-}
+// func isP(s string) string {
+// 	mid := len(s) / 2
+// 	last := len(s) - 1
+// 	for i := 0; i < mid; i++ {
+// 		if s[i] != s[last-i] {
+// 			return "NO. It's not a Palimdrome."
+// 		}
+// 	}
+// 	return "YES! You've entered a Palindrome"
+// }
+// func change(x, y string) (string, string) {
+// 	return y, x
+// }
 
 func main() {
 	requestUseUrl := "http://localhost"
@@ -44,23 +49,34 @@ func main() {
 
 	// fmt.Println("Пароль")
 	// fmt.Scanf("%s\n", &Pass)
-	terminalInputSlice := []string{"Param", "value", "value1", "value2"}
-	fmt.Println(terminalInputSlice[0])
-	fmt.Println(terminalInputSlice[1])
-	fmt.Println(terminalInputSlice[2])
-	var readFromTerminal string
+	// terminalInputSlice := []string{"Param", "value", "value1", "value2"}
+	// fmt.Println(terminalInputSlice[0])
+	// fmt.Println(terminalInputSlice[1])
+	// fmt.Println(terminalInputSlice[2])
+	readFromTerminal := bufio.NewScanner(os.Stdin)
+	// use `for scanner.Scan()` to keep reading
+	// line := readFromTerminal.Text()
 	// var terminalParameter string
 	// var terminalValue string
 	helpChangeDefaults := "\nTo change defaults enter: <value to change> <new value> \nFor example: login user7 \nOr password 12345"
 	fmt.Println("\nDo you want to change defaults? (y/n)")
-	fmt.Scanf("%s\n", &readFromTerminal)
-	if readFromTerminal == "y" {
+	// fmt.Scanf("%s\n", &readFromTerminal)
+	readFromTerminal.Scan()
+	if readFromTerminal.Text() == "y" {
 		fmt.Println(helpChangeDefaults)
-		fmt.Scanf("%s\n", &readFromTerminal)
-		terminalInputSlice = strings.Fields(readFromTerminal)
-		fmt.Println(terminalInputSlice[0])
-		fmt.Println(terminalInputSlice[1])
-		fmt.Println(terminalInputSlice[2])
+		readFromTerminal.Scan()
+		line := readFromTerminal.Text()
+		terminalInputSlice := strings.Fields(line)
+		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
+
+		// terminalInputSlice := strings.Fields(helpChangeDefaults)
+		// fmt.Println(terminalInputSlice[2])
+		// stringfromterm := readFromTerminal
+		// terminalInputSlice := strings.Fields(stringfromterm)
+		// fmt.Println(terminalInputSlice[2])
+		// fmt.Println(terminalInputSlice[0])
+		// fmt.Println(terminalInputSlice[1])
+		// fmt.Println(terminalInputSlice[2])
 	} else {
 		fmt.Println("No changes")
 	}
