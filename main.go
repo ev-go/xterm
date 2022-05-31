@@ -24,6 +24,19 @@ import (
 // 	return y, x
 // }
 
+// type httpRequestMessageStruct struct {
+// 	requestUseLogin
+// 	requestUsePassword
+// 	requestUseData
+// }
+
+// type httpRequestStruct struct {
+// 	requestUseUrl      string
+// 	requestUsePort     string
+// 	requestUseRout     string
+// 	httpRequestMessage httpRequestMessageStruct
+// }
+
 func main() {
 	requestUseUrl := "http://localhost"
 	requestUsePort := ":3000"
@@ -68,7 +81,20 @@ func main() {
 		line := readFromTerminal.Text()
 		terminalInputSlice := strings.Fields(line)
 		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
-
+		switch terminalInputSlice[0] {
+		case "url":
+			requestUseUrl = terminalInputSlice[1]
+		case "port":
+			requestUsePort = terminalInputSlice[1]
+		case "rout":
+			requestUseRout = terminalInputSlice[1]
+		case "login":
+			requestUseLogin = terminalInputSlice[1]
+		case "password":
+			requestUsePassword = terminalInputSlice[1]
+		case "data":
+			requestUseData = terminalInputSlice[1]
+		}
 		// terminalInputSlice := strings.Fields(helpChangeDefaults)
 		// fmt.Println(terminalInputSlice[2])
 		// stringfromterm := readFromTerminal
