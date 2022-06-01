@@ -71,7 +71,7 @@ func main() {
 	// line := readFromTerminal.Text()
 	// var terminalParameter string
 	// var terminalValue string
-	helpChangeDefaults := "\nTo change defaults enter: <value to change> <new value> \nFor example: login user7 \nOr password 12345"
+	helpChangeDefaults := "\nTo change defaults enter: <value to change> <new value> \nFor example: login user8 \nOr password 12345"
 	fmt.Println("\nDo you want to change defaults? (y/n)")
 	// fmt.Scanf("%s\n", &readFromTerminal)
 	readFromTerminal.Scan()
