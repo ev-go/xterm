@@ -2,12 +2,15 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 // func isP(s string) string {
@@ -36,16 +39,24 @@ import (
 // 	requestUseRout     string
 // 	httpRequestMessage httpRequestMessageStruct
 // }
+var ctx = context.Background()
 
 func main() {
-	requestUseUrl := "http://localhost"
-	requestUsePort := ":3000"
-	requestUseRout := "/get-token"
-	requestUseLogin := "login=root1"
-	requestUsePassword := "password=1"
-	requestUseData := "data=21"
 
-	httpRequestString := requestUseUrl + requestUsePort + requestUseRout + "?" + requestUseLogin + "&" + requestUsePassword + "&" + requestUseData
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	requestUseUrl := "localhost"
+	requestUsePort := "3000"
+	requestUseRout := "get-token"
+	requestUseLogin := "root1"
+	requestUsePassword := "1"
+	requestUseData := "21"
+
+	httpRequestString := "http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
 	// Menu
 	fmt.Println("\n********************************/ Menu /****************************************")
 	fmt.Println("\nThis is client for sending http requests to server")
@@ -81,20 +92,24 @@ func main() {
 		line := readFromTerminal.Text()
 		terminalInputSlice := strings.Fields(line)
 		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
-		switch terminalInputSlice[0] {
-		case "url":
-			requestUseUrl = terminalInputSlice[1]
-		case "port":
-			requestUsePort = terminalInputSlice[1]
-		case "rout":
-			requestUseRout = terminalInputSlice[1]
-		case "login":
-			requestUseLogin = terminalInputSlice[1]
-		case "password":
-			requestUsePassword = terminalInputSlice[1]
-		case "data":
-			requestUseData = terminalInputSlice[1]
+		node := rdb.Set(ctx, terminalInputSlice[0], terminalInputSlice[1], 0).Err()
+		if node != nil {
+			panic(node)
 		}
+		// switch terminalInputSlice[0] {
+		// case "url":
+		// 	requestUseUrl = terminalInputSlice[1]
+		// case "port":
+		// 	requestUsePort = terminalInputSlice[1]
+		// case "rout":
+		// 	requestUseRout = terminalInputSlice[1]
+		// case "login":
+		// 	requestUseLogin = terminalInputSlice[1]
+		// case "password":
+		// 	requestUsePassword = terminalInputSlice[1]
+		// case "data":
+		// 	requestUseData = terminalInputSlice[1]
+		// }
 		// terminalInputSlice := strings.Fields(helpChangeDefaults)
 		// fmt.Println(terminalInputSlice[2])
 		// stringfromterm := readFromTerminal
@@ -137,7 +152,116 @@ func main() {
 	// } else {
 	// 	fmt.Println("No changes")
 	// }
-	httpRequestString = requestUseUrl + requestUsePort + requestUseRout + "?" + requestUseLogin + "&" + requestUsePassword + "&" + requestUseData
+
+	requestUseUrl, node := rdb.Get(ctx, "url").Result()
+	if node == redis.Nil {
+		fmt.Println("url does not exist")
+		fmt.Println(helpChangeDefaults)
+		readFromTerminal.Scan()
+		line := readFromTerminal.Text()
+		terminalInputSlice := strings.Fields(line)
+		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
+		node := rdb.Set(ctx, terminalInputSlice[0], terminalInputSlice[1], 0).Err()
+		if node != nil {
+			panic(node)
+		}
+	} else if node != nil {
+		panic(node)
+	} else {
+		fmt.Println("url:", requestUseUrl)
+	}
+
+	requestUsePort, node = rdb.Get(ctx, "port").Result()
+	if node == redis.Nil {
+		fmt.Println("port does not exist")
+		fmt.Println(helpChangeDefaults)
+		readFromTerminal.Scan()
+		line := readFromTerminal.Text()
+		terminalInputSlice := strings.Fields(line)
+		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
+		node := rdb.Set(ctx, terminalInputSlice[0], terminalInputSlice[1], 0).Err()
+		if node != nil {
+			panic(node)
+		}
+	} else if node != nil {
+		panic(node)
+	} else {
+		fmt.Println("port:", requestUsePort)
+	}
+
+	requestUseRout, node = rdb.Get(ctx, "rout").Result()
+	if node == redis.Nil {
+		fmt.Println("rout does not exist")
+		fmt.Println(helpChangeDefaults)
+		readFromTerminal.Scan()
+		line := readFromTerminal.Text()
+		terminalInputSlice := strings.Fields(line)
+		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
+		node := rdb.Set(ctx, terminalInputSlice[0], terminalInputSlice[1], 0).Err()
+		if node != nil {
+			panic(node)
+		}
+	} else if node != nil {
+		panic(node)
+	} else {
+		fmt.Println("rout:", requestUseRout)
+	}
+
+	requestUseLogin, node = rdb.Get(ctx, "login").Result()
+	if node == redis.Nil {
+		fmt.Println("login does not exist")
+		fmt.Println(helpChangeDefaults)
+		readFromTerminal.Scan()
+		line := readFromTerminal.Text()
+		terminalInputSlice := strings.Fields(line)
+		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
+		node := rdb.Set(ctx, terminalInputSlice[0], terminalInputSlice[1], 0).Err()
+		if node != nil {
+			panic(node)
+		}
+	} else if node != nil {
+		panic(node)
+	} else {
+		fmt.Println("login:", requestUseLogin)
+	}
+
+	requestUsePassword, node = rdb.Get(ctx, "password").Result()
+	if node == redis.Nil {
+		fmt.Println("password does not exist")
+		fmt.Println(helpChangeDefaults)
+		readFromTerminal.Scan()
+		line := readFromTerminal.Text()
+		terminalInputSlice := strings.Fields(line)
+		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
+		node := rdb.Set(ctx, terminalInputSlice[0], terminalInputSlice[1], 0).Err()
+		if node != nil {
+			panic(node)
+		}
+	} else if node != nil {
+		panic(node)
+	} else {
+		fmt.Println("password:", requestUsePassword)
+	}
+
+	requestUseData, node = rdb.Get(ctx, "data").Result()
+	if node == redis.Nil {
+		fmt.Println("data does not exist")
+		fmt.Println(helpChangeDefaults)
+		readFromTerminal.Scan()
+		line := readFromTerminal.Text()
+		terminalInputSlice := strings.Fields(line)
+		fmt.Println("\n<Value to change:>", terminalInputSlice[0], "<New value:>", terminalInputSlice[1])
+		node := rdb.Set(ctx, terminalInputSlice[0], terminalInputSlice[1], 0).Err()
+		if node != nil {
+			panic(node)
+		}
+	} else if node != nil {
+		panic(node)
+	} else {
+		fmt.Println("data:", requestUseData)
+	}
+
+	httpRequestString = "http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
 
 	fmt.Println("\n******************************/ Menu End /**************************************")
 	//Menu end
