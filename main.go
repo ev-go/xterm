@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -150,7 +151,17 @@ func main() {
 	// 		fmt.Println("\nPort changed for:", requestUsePort)
 	// 	}
 	// } else {
-	// 	fmt.Println("No changes")
+	//
+	type Gettokenanswerstruct struct {
+		TokenRequestAt string
+		User           string
+		Login          string
+		Password       string
+		DataAnswer     string
+		Token          string
+	}
+
+	fmt.Println("No changes")
 	// }
 
 	requestUseUrl, node := rdb.Get(ctx, "url").Result()
@@ -265,6 +276,7 @@ func main() {
 
 	fmt.Println("\n******************************/ Menu End /**************************************")
 	//Menu end
+	fmt.Println("http request:", httpRequestString)
 
 	bearer := "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBVFRFTlRJT04hIjoi0J_RgNC40LLQtdGCLCDQnNCw0LrRgSA6KSIsIkRhdGEgYW5zd2VyIGlzIjoiMjExIiwiVG9rZW4gcmVxdWVzdCBhdCI6IjIwMjItMDUtMjVUMjM6NDg6MzYuODAwNDU4MiswNTowMCIsImFkbWluIHBlcm1pc3Npb25zPyI6Im1heWJlIiwiZXhwIjoxNjUzNTY5MzE3LCJsb2dpbiI6InJvb3QxIn0.C6FekKeToH0j-G8GyiMegaoLtWODi9rOK-OM7ModS5Y"
 	cli := http.Client{Timeout: 5 * time.Second}
@@ -274,13 +286,51 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// defer request.Body.Close() /where to add this?
+	//defer request.Body.Close()
 
 	response, err := cli.Do(request)
 	if err != nil {
 		panic(err)
 	}
 	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("\nresponse?:", string(responseData))
+
+	var Gettokenanswer = &Gettokenanswerstruct{}
+	json.Unmarshal([]byte(responseData), Gettokenanswer)
+	fmt.Println("\ntoken from struct:", Gettokenanswer.Token)
+
+	newTokenToRedis := rdb.Set(ctx, requestUseLogin, Gettokenanswer.Token, 0).Err()
+	if newTokenToRedis != nil {
+		panic(newTokenToRedis)
+	}
+
+	tokenFromRedis, err := rdb.Get(ctx, requestUseLogin).Result()
+	if err != nil {
+		fmt.Println("Have no token for:", requestUseLogin, "\nChange defaults for http request:", httpRequestString)
+		panic(err)
+	}
+	fmt.Println("TokenFromRedis:", requestUseLogin, tokenFromRedis)
+
+	httpRequestString = "http://localhost:3000/products"
+
+	bearer = "Bearer " + tokenFromRedis
+	//cli = http.Client{Timeout: 5 * time.Second}
+	request, err = http.NewRequest("GET", httpRequestString, nil)
+	request.Header.Add("Authorization", bearer)
+	request.Header.Add("Content-Type", `application/json`)
+	if err != nil {
+		panic(err)
+	}
+
+	response, err = cli.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	responseData, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		panic(err)
 	}
