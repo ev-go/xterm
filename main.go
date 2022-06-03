@@ -64,7 +64,7 @@ func redisGet(key string) string {
 	if node == redis.Nil {
 		fmt.Println(key, "does not exist")
 
-		httpReqDefaultsChange()
+		httpReqDefaultsChange(key)
 	} else if node != nil {
 		panic(node)
 	} else {
@@ -74,14 +74,14 @@ func redisGet(key string) string {
 	return dataFromRedis
 }
 
-func httpReqDefaultsChange() {
-	//fmt.Println(key)
+func httpReqDefaultsChange(key string) {
+	// fmt.Println(key)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-
+	HelpChangeDefaults := "\nTo change default <" + key + "> enter: " + key + " <new value>"
 	fmt.Println(HelpChangeDefaults)
 	readFromTerminal := bufio.NewScanner(os.Stdin)
 	readFromTerminal.Scan()
@@ -104,12 +104,17 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	requestUseUrl := "localhost"
-	requestUsePort := "3000"
-	requestUseRout := "get-token"
-	requestUseLogin := "root1"
-	requestUsePassword := "1"
-	requestUseData := "21"
+	requestUseUrl := redisGet("url")
+
+	requestUsePort := redisGet("port")
+
+	requestUseRout := redisGet("rout")
+
+	requestUseLogin := redisGet("login")
+
+	requestUsePassword := redisGet("password")
+
+	requestUseData := redisGet("data")
 
 	httpRequestString := "http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
 	// Menu
@@ -128,12 +133,10 @@ func main() {
 	readFromTerminal := bufio.NewScanner(os.Stdin)
 	readFromTerminal.Scan()
 	if readFromTerminal.Text() == "y" {
-		httpReqDefaultsChange()
+		httpReqDefaultsChange("<Any default value>")
 	} else {
 		fmt.Println("No changes")
 	}
-
-	fmt.Println("No changes")
 
 	requestUseUrl = redisGet("url")
 
