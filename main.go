@@ -63,8 +63,8 @@ func redisGet(key string) string {
 	dataFromRedis, node := rdb.Get(ctx, key).Result()
 	if node == redis.Nil {
 		fmt.Println(key, "does not exist")
-
-		httpReqDefaultsChange(key)
+		k := KeyStruct{key}
+		k.httpReqDefaultsChange()
 	} else if node != nil {
 		panic(node)
 	} else {
@@ -74,14 +74,18 @@ func redisGet(key string) string {
 	return dataFromRedis
 }
 
-func httpReqDefaultsChange(key string) {
+type KeyStruct struct {
+	Key string
+}
+
+func (k *KeyStruct) httpReqDefaultsChange() {
 	// fmt.Println(key)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-	HelpChangeDefaults := "\nTo change default <" + key + "> enter: " + key + " <new value>"
+	HelpChangeDefaults := "\nTo change default <" + k.Key + "> enter: " + k.Key + " <new value>"
 	fmt.Println(HelpChangeDefaults)
 	readFromTerminal := bufio.NewScanner(os.Stdin)
 	readFromTerminal.Scan()
@@ -133,7 +137,8 @@ func main() {
 	readFromTerminal := bufio.NewScanner(os.Stdin)
 	readFromTerminal.Scan()
 	if readFromTerminal.Text() == "y" {
-		httpReqDefaultsChange("<Any default value>")
+		k := KeyStruct{"<Any default value>"}
+		k.httpReqDefaultsChange()
 	} else {
 		fmt.Println("No changes")
 	}
