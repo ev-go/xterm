@@ -100,6 +100,69 @@ func (k *KeyStruct) httpReqDefaultsChange() {
 	//return dataFromRedis
 }
 
+func getTokenRequest(httpRequestString string, requestUseLogin string) {
+	cli := http.Client{Timeout: 5 * time.Second}
+	request, err := http.NewRequest("GET", httpRequestString, nil)
+	//request.Header.Add("Authorization", bearer)
+	request.Header.Add("Content-Type", `application/json`)
+	if err != nil {
+		panic(err)
+	}
+	//defer request.Body.Close()
+
+	response, err := cli.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("\nresponse?:", string(responseData))
+
+	var Gettokenanswer = &Gettokenanswerstruct{}
+	json.Unmarshal([]byte(responseData), Gettokenanswer)
+	fmt.Println("\ntoken from struct:", Gettokenanswer.Token)
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	newTokenToRedis := rdb.Set(ctx, requestUseLogin, Gettokenanswer.Token, 0).Err()
+	if newTokenToRedis != nil {
+		panic(newTokenToRedis)
+	}
+}
+
+func getPrivateRout(rout string, tokenFromRedis string) []byte {
+	//httpRequestString := "http://localhost:3000/products"
+
+	bearer := "Bearer " + tokenFromRedis
+	cli := http.Client{Timeout: 5 * time.Second}
+	request, err := http.NewRequest("GET", rout, nil)
+	request.Header.Add("Authorization", bearer)
+	request.Header.Add("Content-Type", `application/json`)
+	if err != nil {
+		panic(err)
+	}
+
+	response, err := cli.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	defer response.Body.Close()
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("\nresponse?:", string(responseData))
+	return responseData
+}
+
 func main() {
 
 	rdb := redis.NewClient(&redis.Options{
@@ -162,34 +225,8 @@ func main() {
 	fmt.Println("http request:", httpRequestString)
 
 	//bearer := "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBVFRFTlRJT04hIjoi0J_RgNC40LLQtdGCLCDQnNCw0LrRgSA6KSIsIkRhdGEgYW5zd2VyIGlzIjoiMjExIiwiVG9rZW4gcmVxdWVzdCBhdCI6IjIwMjItMDUtMjVUMjM6NDg6MzYuODAwNDU4MiswNTowMCIsImFkbWluIHBlcm1pc3Npb25zPyI6Im1heWJlIiwiZXhwIjoxNjUzNTY5MzE3LCJsb2dpbiI6InJvb3QxIn0.C6FekKeToH0j-G8GyiMegaoLtWODi9rOK-OM7ModS5Y"
-	cli := http.Client{Timeout: 5 * time.Second}
-	request, err := http.NewRequest("GET", httpRequestString, nil)
-	//request.Header.Add("Authorization", bearer)
-	request.Header.Add("Content-Type", `application/json`)
-	if err != nil {
-		panic(err)
-	}
-	//defer request.Body.Close()
 
-	response, err := cli.Do(request)
-	if err != nil {
-		panic(err)
-	}
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("\nresponse?:", string(responseData))
-
-	var Gettokenanswer = &Gettokenanswerstruct{}
-	json.Unmarshal([]byte(responseData), Gettokenanswer)
-	fmt.Println("\ntoken from struct:", Gettokenanswer.Token)
-
-	newTokenToRedis := rdb.Set(ctx, requestUseLogin, Gettokenanswer.Token, 0).Err()
-	if newTokenToRedis != nil {
-		panic(newTokenToRedis)
-	}
+	getTokenRequest(httpRequestString, requestUseLogin)
 
 	tokenFromRedis, err := rdb.Get(ctx, requestUseLogin).Result()
 	if err != nil {
@@ -198,27 +235,8 @@ func main() {
 	}
 	fmt.Println("TokenFromRedis:", requestUseLogin, tokenFromRedis)
 
-	httpRequestString = "http://localhost:3000/products"
-
-	bearer := "Bearer " + tokenFromRedis
-	cli = http.Client{Timeout: 5 * time.Second}
-	request, err = http.NewRequest("GET", httpRequestString, nil)
-	request.Header.Add("Authorization", bearer)
-	request.Header.Add("Content-Type", `application/json`)
-	if err != nil {
-		panic(err)
-	}
-
-	response, err = cli.Do(request)
-	if err != nil {
-		panic(err)
-	}
-	defer response.Body.Close()
-	responseData, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
+	rout := "http://localhost:3000/products"
+	responseData := getPrivateRout(rout, tokenFromRedis)
 	fmt.Println("\nresponse?:", string(responseData))
 
 }
