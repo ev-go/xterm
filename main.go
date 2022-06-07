@@ -101,10 +101,10 @@ func (k *KeyStruct) httpReqDefaultsChange() {
 	//return dataFromRedis
 }
 
-func getTokenRequest(req httpRequestStruct, requestUseLogin string) {
+func getTokenRequest(req httpRequestStruct) {
 	//httpRequestString := "http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
 
-	httpRequestString := hhtReqStructToString(req)
+	httpRequestString := httpReqStructToString(req)
 	cli := http.Client{Timeout: 5 * time.Second}
 	request, err := http.NewRequest("GET", httpRequestString, nil)
 	//request.Header.Add("Authorization", bearer)
@@ -167,7 +167,7 @@ func getPrivateRout(rout string, tokenFromRedis string) []byte {
 	return responseData
 }
 
-func hhtReqStructToString(req httpRequestStruct) string {
+func httpReqStructToString(req httpRequestStruct) string {
 	String := "http://" +
 		req.requestUseUrl +
 		":" +
@@ -186,14 +186,13 @@ func hhtReqStructToString(req httpRequestStruct) string {
 
 func main() {
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	// rdb := redis.NewClient(&redis.Options{
+	// 	Addr:     "localhost:6379",
+	// 	Password: "", // no password set
+	// 	DB:       0,  // use default DB
+	// })
 
 	requestUseUrl := redisGet("url")
-
 	requestUsePort := redisGet("port")
 
 	requestUseRout := redisGet("rout")
@@ -212,7 +211,7 @@ func main() {
 			requestUsePassword,
 			requestUseData}}
 
-	httpRequestString := hhtReqStructToString(httpRequestVar)
+	httpRequestString := httpReqStructToString(httpRequestVar)
 	//"http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
 	// Menu
 	fmt.Println("\n********************************/ Menu /****************************************")
@@ -236,55 +235,59 @@ func main() {
 		fmt.Println("No changes")
 	}
 
-	requestUseUrl = redisGet("url")
+	httpRequestVar.requestUseUrl = redisGet("url")
 
-	requestUsePort = redisGet("port")
+	httpRequestVar.requestUsePort = redisGet("port")
 
-	requestUseRout = redisGet("rout")
+	httpRequestVar.requestUseRout = redisGet("rout")
 
-	requestUseLogin = redisGet("login")
+	httpRequestVar.httpRequestMessage.requestUseLogin = redisGet("login")
 
-	requestUsePassword = redisGet("password")
+	httpRequestVar.httpRequestMessage.requestUsePassword = redisGet("password")
 
-	requestUseData = redisGet("data")
+	httpRequestVar.httpRequestMessage.requestUseData = redisGet("data")
 
-	httpRequestString = "http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
+	//fmt.Println(requestUseUrl, requestUsePort, requestUseRout, requestUseLogin, requestUsePassword, requestUseData)
+
+	httpRequestString = httpReqStructToString(httpRequestVar)
 
 	fmt.Println("\n******************************/ Menu End /**************************************")
 	//Menu end
 	fmt.Println("http request:", httpRequestString)
 
-	//bearer := "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBVFRFTlRJT04hIjoi0J_RgNC40LLQtdGCLCDQnNCw0LrRgSA6KSIsIkRhdGEgYW5zd2VyIGlzIjoiMjExIiwiVG9rZW4gcmVxdWVzdCBhdCI6IjIwMjItMDUtMjVUMjM6NDg6MzYuODAwNDU4MiswNTowMCIsImFkbWluIHBlcm1pc3Npb25zPyI6Im1heWJlIiwiZXhwIjoxNjUzNTY5MzE3LCJsb2dpbiI6InJvb3QxIn0.C6FekKeToH0j-G8GyiMegaoLtWODi9rOK-OM7ModS5Y"
+	getTokenRequest(httpRequestVar)
 
-	// type httpRequestMessageStruct struct {
-	// 	requestUseLogin    string
-	// 	requestUsePassword string
-	// 	requestUseData     string
-	// }
+	tokenFromRedis := redisGet(httpRequestVar.httpRequestMessage.requestUseLogin) //rdb.Get(ctx, requestUseLogin).Result()
 
-	// type httpRequestStruct struct {
-	// 	requestUseUrl      string
-	// 	requestUsePort     string
-	// 	requestUseRout     string
-	// 	httpRequestMessage httpRequestMessageStruct
-	// }
-
-	//httpRequestVar := httpRequestStruct{requestUseUrl, requestUsePort, requestUseRout, httpRequestMessageStruct{requestUseLogin, requestUsePassword, requestUseData}}
-
-	getTokenRequest(httpRequestVar, requestUseLogin)
-
-	tokenFromRedis, err := rdb.Get(ctx, requestUseLogin).Result()
-	if err != nil {
-		fmt.Println("Have no token for:", requestUseLogin, "\nChange defaults for http request:", httpRequestString)
-		panic(err)
-	}
-	fmt.Println("TokenFromRedis:", requestUseLogin, tokenFromRedis)
+	fmt.Println("TokenFromRedis:", httpRequestVar.httpRequestMessage.requestUseLogin, tokenFromRedis)
 
 	rout := "http://localhost:3000/products"
 	responseData := getPrivateRout(rout, tokenFromRedis)
 	fmt.Println("\nresponse?:", string(responseData))
 
 }
+
+// if err != nil {
+// 	fmt.Println("Have no token for:", requestUseLogin, "\nChange defaults for http request:", httpRequestString)
+// 	panic(err)
+// }
+
+//bearer := "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBVFRFTlRJT04hIjoi0J_RgNC40LLQtdGCLCDQnNCw0LrRgSA6KSIsIkRhdGEgYW5zd2VyIGlzIjoiMjExIiwiVG9rZW4gcmVxdWVzdCBhdCI6IjIwMjItMDUtMjVUMjM6NDg6MzYuODAwNDU4MiswNTowMCIsImFkbWluIHBlcm1pc3Npb25zPyI6Im1heWJlIiwiZXhwIjoxNjUzNTY5MzE3LCJsb2dpbiI6InJvb3QxIn0.C6FekKeToH0j-G8GyiMegaoLtWODi9rOK-OM7ModS5Y"
+
+// type httpRequestMessageStruct struct {
+// 	requestUseLogin    string
+// 	requestUsePassword string
+// 	requestUseData     string
+// }
+
+// type httpRequestStruct struct {
+// 	requestUseUrl      string
+// 	requestUsePort     string
+// 	requestUseRout     string
+// 	httpRequestMessage httpRequestMessageStruct
+// }
+
+//httpRequestVar := httpRequestStruct{requestUseUrl, requestUsePort, requestUseRout, httpRequestMessageStruct{requestUseLogin, requestUsePassword, requestUseData}}
 
 // fmt.Println("Логин")
 // fmt.Scanf("%s\n", &Log)
