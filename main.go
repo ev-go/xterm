@@ -186,22 +186,13 @@ func httpReqStructToString(req httpRequestStruct) string {
 
 func main() {
 
-	// rdb := redis.NewClient(&redis.Options{
-	// 	Addr:     "localhost:6379",
-	// 	Password: "", // no password set
-	// 	DB:       0,  // use default DB
-	// })
-
 	requestUseUrl := redisGet("url")
 	requestUsePort := redisGet("port")
-
 	requestUseRout := redisGet("rout")
-
 	requestUseLogin := redisGet("login")
-
 	requestUsePassword := redisGet("password")
-
 	requestUseData := redisGet("data")
+
 	httpRequestVar := httpRequestStruct{
 		requestUseUrl,
 		requestUsePort,
@@ -212,10 +203,10 @@ func main() {
 			requestUseData}}
 
 	httpRequestString := httpReqStructToString(httpRequestVar)
-	//"http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
-	// Menu
+
 	fmt.Println("\n********************************/ Menu /****************************************")
 	fmt.Println("\nThis is client for sending http requests to server")
+
 	fmt.Println("\nDefault URL: ", httpRequestVar.requestUseUrl, ";",
 		"\nDefault Port: ", httpRequestVar.requestUsePort, ";",
 		"\nDefault Rout: ", httpRequestVar.requestUseRout, ";",
@@ -236,29 +227,22 @@ func main() {
 	}
 
 	httpRequestVar.requestUseUrl = redisGet("url")
-
 	httpRequestVar.requestUsePort = redisGet("port")
-
 	httpRequestVar.requestUseRout = redisGet("rout")
-
 	httpRequestVar.httpRequestMessage.requestUseLogin = redisGet("login")
-
 	httpRequestVar.httpRequestMessage.requestUsePassword = redisGet("password")
-
 	httpRequestVar.httpRequestMessage.requestUseData = redisGet("data")
-
-	//fmt.Println(requestUseUrl, requestUsePort, requestUseRout, requestUseLogin, requestUsePassword, requestUseData)
 
 	httpRequestString = httpReqStructToString(httpRequestVar)
 
 	fmt.Println("\n******************************/ Menu End /**************************************")
 	//Menu end
+
 	fmt.Println("http request:", httpRequestString)
 
 	getTokenRequest(httpRequestVar)
 
-	tokenFromRedis := redisGet(httpRequestVar.httpRequestMessage.requestUseLogin) //rdb.Get(ctx, requestUseLogin).Result()
-
+	tokenFromRedis := redisGet(httpRequestVar.httpRequestMessage.requestUseLogin)
 	fmt.Println("TokenFromRedis:", httpRequestVar.httpRequestMessage.requestUseLogin, tokenFromRedis)
 
 	rout := "http://localhost:3000/products"
