@@ -37,18 +37,19 @@ type Gettokenanswerstruct struct {
 // 	return y, x
 // }
 
-// type httpRequestMessageStruct struct {
-// 	requestUseLogin
-// 	requestUsePassword
-// 	requestUseData
-// }
+type httpRequestMessageStruct struct {
+	requestUseLogin    string
+	requestUsePassword string
+	requestUseData     string
+}
 
-// type httpRequestStruct struct {
-// 	requestUseUrl      string
-// 	requestUsePort     string
-// 	requestUseRout     string
-// 	httpRequestMessage httpRequestMessageStruct
-// }
+type httpRequestStruct struct {
+	requestUseUrl      string
+	requestUsePort     string
+	requestUseRout     string
+	httpRequestMessage httpRequestMessageStruct
+}
+
 var ctx = context.Background()
 
 var HelpChangeDefaults = "\nTo change defaults enter: <value to change> <new value> \nFor example: login user8 \nOr password 12345"
@@ -100,7 +101,10 @@ func (k *KeyStruct) httpReqDefaultsChange() {
 	//return dataFromRedis
 }
 
-func getTokenRequest(httpRequestString string, requestUseLogin string) {
+func getTokenRequest(req httpRequestStruct, requestUseLogin string) {
+	//httpRequestString := "http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
+
+	httpRequestString := hhtReqStructToString(req)
 	cli := http.Client{Timeout: 5 * time.Second}
 	request, err := http.NewRequest("GET", httpRequestString, nil)
 	//request.Header.Add("Authorization", bearer)
@@ -131,7 +135,7 @@ func getTokenRequest(httpRequestString string, requestUseLogin string) {
 		DB:       0,  // use default DB
 	})
 
-	newTokenToRedis := rdb.Set(ctx, requestUseLogin, Gettokenanswer.Token, 0).Err()
+	newTokenToRedis := rdb.Set(ctx, req.httpRequestMessage.requestUseLogin, Gettokenanswer.Token, 0).Err()
 	if newTokenToRedis != nil {
 		panic(newTokenToRedis)
 	}
@@ -159,8 +163,25 @@ func getPrivateRout(rout string, tokenFromRedis string) []byte {
 		panic(err)
 	}
 
-	fmt.Println("\nresponse?:", string(responseData))
+	//fmt.Println("\nresponse?:", string(responseData))
 	return responseData
+}
+
+func hhtReqStructToString(req httpRequestStruct) string {
+	String := "http://" +
+		req.requestUseUrl +
+		":" +
+		req.requestUsePort +
+		"/" +
+		req.requestUseRout +
+		"?login=" +
+		req.httpRequestMessage.requestUseLogin +
+		"&password=" +
+		req.httpRequestMessage.requestUsePassword +
+		"&data=" +
+		req.httpRequestMessage.requestUseData
+
+	return String
 }
 
 func main() {
@@ -182,17 +203,26 @@ func main() {
 	requestUsePassword := redisGet("password")
 
 	requestUseData := redisGet("data")
+	httpRequestVar := httpRequestStruct{
+		requestUseUrl,
+		requestUsePort,
+		requestUseRout,
+		httpRequestMessageStruct{
+			requestUseLogin,
+			requestUsePassword,
+			requestUseData}}
 
-	httpRequestString := "http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
+	httpRequestString := hhtReqStructToString(httpRequestVar)
+	//"http://" + requestUseUrl + ":" + requestUsePort + "/" + requestUseRout + "?login=" + requestUseLogin + "&password=" + requestUsePassword + "&data=" + requestUseData
 	// Menu
 	fmt.Println("\n********************************/ Menu /****************************************")
 	fmt.Println("\nThis is client for sending http requests to server")
-	fmt.Println("\nDefault URL: ", requestUseUrl, ";",
-		"\nDefault Port: ", requestUsePort, ";",
-		"\nDefault Rout: ", requestUseRout, ";",
-		"\nDefault Login: ", requestUseLogin, ";",
-		"\nDefault Password: ", requestUsePassword, ";",
-		"\nDefault Data: ", requestUseData, ";",
+	fmt.Println("\nDefault URL: ", httpRequestVar.requestUseUrl, ";",
+		"\nDefault Port: ", httpRequestVar.requestUsePort, ";",
+		"\nDefault Rout: ", httpRequestVar.requestUseRout, ";",
+		"\nDefault Login: ", httpRequestVar.httpRequestMessage.requestUseLogin, ";",
+		"\nDefault Password: ", httpRequestVar.httpRequestMessage.requestUsePassword, ";",
+		"\nDefault Data: ", httpRequestVar.httpRequestMessage.requestUseData, ";",
 		"\nDefault http request: ", httpRequestString, ";")
 
 	fmt.Println("\nDo you want to change defaults? (y/n)")
@@ -226,7 +256,22 @@ func main() {
 
 	//bearer := "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBVFRFTlRJT04hIjoi0J_RgNC40LLQtdGCLCDQnNCw0LrRgSA6KSIsIkRhdGEgYW5zd2VyIGlzIjoiMjExIiwiVG9rZW4gcmVxdWVzdCBhdCI6IjIwMjItMDUtMjVUMjM6NDg6MzYuODAwNDU4MiswNTowMCIsImFkbWluIHBlcm1pc3Npb25zPyI6Im1heWJlIiwiZXhwIjoxNjUzNTY5MzE3LCJsb2dpbiI6InJvb3QxIn0.C6FekKeToH0j-G8GyiMegaoLtWODi9rOK-OM7ModS5Y"
 
-	getTokenRequest(httpRequestString, requestUseLogin)
+	// type httpRequestMessageStruct struct {
+	// 	requestUseLogin    string
+	// 	requestUsePassword string
+	// 	requestUseData     string
+	// }
+
+	// type httpRequestStruct struct {
+	// 	requestUseUrl      string
+	// 	requestUsePort     string
+	// 	requestUseRout     string
+	// 	httpRequestMessage httpRequestMessageStruct
+	// }
+
+	//httpRequestVar := httpRequestStruct{requestUseUrl, requestUsePort, requestUseRout, httpRequestMessageStruct{requestUseLogin, requestUsePassword, requestUseData}}
+
+	getTokenRequest(httpRequestVar, requestUseLogin)
 
 	tokenFromRedis, err := rdb.Get(ctx, requestUseLogin).Result()
 	if err != nil {
